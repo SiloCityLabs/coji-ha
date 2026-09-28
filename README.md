@@ -14,7 +14,7 @@ Protocol notes are in [`PROTOCOL.md`](PROTOCOL.md). They were taken from the pub
 - **Backlight** — screen backlight
 - **Volume** — 0–100, mapped to the robot's 0–50 steps
 - **Sounds, animations, and pictures** — built-in clip names, or a raw on-device path
-- **Battery voltage**, firmware date, head buttons, tilt / shake / pickup
+- **Battery voltage**, firmware version, head buttons, tilt / shake / pickup
 - Services: `drive`, `play_sound`, `play_animation`, `show_image`, `stop`
 
 ## Requirements

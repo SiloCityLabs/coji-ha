@@ -28,7 +28,7 @@ The first decoded byte is the command. The rest is the payload.
 | Command | Byte | Payload |
 |---------|------|---------|
 | Play sound | `0x06` | clip id, path length, ASCII path |
-| Firmware | `0x14` | none. Reply is year, month, day, revision |
+| Firmware | `0x14` | none. Reply bytes are concatenated as signed decimals |
 | Set volume | `0x21` | 0–50 |
 | Get volume | `0x22` | reply is one byte, 0–50 |
 | Set backlight | `0x24` | 0 or 1 |

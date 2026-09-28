@@ -5,7 +5,10 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    async_address_present,
+    async_ble_device_from_address,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
@@ -37,7 +40,7 @@ class CojiUpdateCoordinator(DataUpdateCoordinator[dict]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=60),
+            update_interval=timedelta(seconds=180),
         )
         self.client = client
         self.unique_id = unique_id
@@ -55,9 +58,12 @@ class CojiUpdateCoordinator(DataUpdateCoordinator[dict]):
         self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, data)
 
     async def _async_update_data(self) -> dict:
-        device = async_ble_device_from_address(self.hass, self.client.address, True)
+        address = self.client.address
+        if not async_address_present(self.hass, address, True):
+            raise UpdateFailed(f"COJI {address} is not advertising")
+        device = async_ble_device_from_address(self.hass, address, True)
         if device is None:
-            raise UpdateFailed(f"COJI {self.client.address} is not in range")
+            raise UpdateFailed(f"COJI {address} is not in range")
         self.client.device = device
         try:
             state = await self.client.refresh()

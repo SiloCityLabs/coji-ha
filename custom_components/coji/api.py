@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
 
@@ -58,6 +59,15 @@ _LOGGER = logging.getLogger(__name__)
 
 NOTIFY_CHUNK = 20
 COMMAND_TIMEOUT = 4.0
+# One try. The default is four 20s attempts, which pins the proxy and
+# dumps every queued command onto the robot the moment it wakes up.
+CONNECT_ATTEMPTS = 1
+CONNECT_BACKOFF_SECONDS = 20.0
+# Keep the link open briefly so a few button presses share one connection.
+SESSION_IDLE_SECONDS = 20.0
+# Commands that sat behind a connect or a stuck request are stale.
+STALE_AFTER_SECONDS = 3.0
+COMMAND_GAP_SECONDS = 0.08
 
 StateListener = Callable[["CojiState"], None]
 
@@ -93,7 +103,7 @@ class CojiState:
 
 
 class CojiClient:
-    """Connect, send one burst of commands, and disconnect."""
+    """One BLE session. Commands reuse it, then the link drops after it goes quiet."""
 
     def __init__(self, ble_device: BLEDevice) -> None:
         """Init from a Home Assistant BLE device."""
@@ -108,6 +118,9 @@ class CojiClient:
         self._rx_buffer = bytearray()
         self._waiters: dict[int, asyncio.Future[bytes]] = {}
         self._listeners: list[StateListener] = []
+        self._backoff_until = 0.0
+        self._session = 0
+        self._idle_handle: asyncio.TimerHandle | None = None
 
     def add_listener(self, listener: StateListener) -> None:
         """Register a callback invoked after state changes."""
@@ -132,20 +145,22 @@ class CojiClient:
                 CMD_GET_BACKLIGHT,
                 CMD_GET_CHEST,
             )
-            failures = 0
+            answered = False
             for command in commands:
                 try:
                     await self._request(command)
                 except TimeoutError:
-                    failures += 1
-                    _LOGGER.debug("COJI command 0x%02X timed out", command)
+                    _LOGGER.warning("COJI command 0x%02X timed out", command)
+                    if not answered:
+                        raise TimeoutError("COJI did not respond") from None
+                    break
+                answered = True
+                await asyncio.sleep(COMMAND_GAP_SECONDS)
             if self.state.firmware is None:
                 try:
                     await self._request(CMD_GET_FIRMWARE)
                 except TimeoutError:
                     _LOGGER.debug("COJI firmware request timed out")
-            if failures == len(commands):
-                raise TimeoutError("COJI did not respond")
             return self.state
 
         return await self._run(_do)
@@ -248,19 +263,48 @@ class CojiClient:
 
     async def reboot(self) -> None:
         """Reboot into the application (mode 1)."""
-        await self._run(lambda: self._write(bytes((CMD_REBOOT, 0x01))))
+        await self._run(lambda: self._write(bytes((CMD_REBOOT, 0x01))), hold=False)
 
     async def power_off(self) -> None:
         """Ask the robot to power off."""
-        await self._run(lambda: self._write(bytes((CMD_POWER_OFF,))))
+        await self._run(lambda: self._write(bytes((CMD_POWER_OFF,))), hold=False)
 
-    async def _run(self, action: Callable[[], Awaitable]):
+    async def async_shutdown(self) -> None:
+        """Drop the link. Called when the config entry unloads."""
+        self._session += 1
+        self._cancel_idle()
         async with self._lock:
-            await self._ensure_connected()
+            await self._disconnect()
+
+    async def _run(self, action: Callable[[], Awaitable], *, hold: bool = True):
+        started = time.monotonic()
+        async with self._lock:
+            waited = time.monotonic() - started
+            if waited > STALE_AFTER_SECONDS:
+                _LOGGER.warning(
+                    "Dropped a COJI command that waited %.1fs",
+                    waited,
+                )
+                raise ConnectionError("COJI was busy; command dropped")
+            if time.monotonic() < self._backoff_until:
+                raise ConnectionError("COJI is cooling down after a failed connection")
+            # Invalidate a disconnect that already left the timer and is
+            # waiting to take this lock.
+            self._session += 1
+            self._cancel_idle()
             try:
-                return await action()
-            finally:
+                await self._ensure_connected()
+                result = await action()
+            except (TimeoutError, ConnectionError):
+                self._backoff_until = time.monotonic() + CONNECT_BACKOFF_SECONDS
                 await self._disconnect()
+                raise
+            self._backoff_until = 0.0
+            if hold:
+                self._arm_idle()
+            else:
+                await self._disconnect()
+            return result
 
     async def _ensure_connected(self) -> None:
         if self._client and self._client.is_connected:
@@ -268,12 +312,15 @@ class CojiClient:
                 await self._start_notify()
             return
         try:
+            _LOGGER.info("Connecting to COJI %s", self.address)
             client = await establish_connection(
                 BleakClientWithServiceCache,
                 self.device,
                 self.address,
                 disconnected_callback=self._client_disconnected,
+                max_attempts=CONNECT_ATTEMPTS,
             )
+            _LOGGER.info("Connected to COJI %s", self.address)
         except (
             BleakNotFoundError,
             BleakOutOfConnectionSlotsError,
@@ -299,6 +346,29 @@ class CojiClient:
         for waiter in self._waiters.values():
             if not waiter.done():
                 waiter.set_exception(ConnectionError("COJI disconnected"))
+
+    def _arm_idle(self) -> None:
+        """Disconnect after the session has been quiet."""
+        self._cancel_idle()
+        session = self._session
+        loop = asyncio.get_running_loop()
+        self._idle_handle = loop.call_later(
+            SESSION_IDLE_SECONDS,
+            lambda: asyncio.create_task(self._disconnect_if_idle(session)),
+        )
+
+    def _cancel_idle(self) -> None:
+        if self._idle_handle is not None:
+            self._idle_handle.cancel()
+            self._idle_handle = None
+
+    async def _disconnect_if_idle(self, session: int) -> None:
+        async with self._lock:
+            if session != self._session:
+                return
+            self._idle_handle = None
+            _LOGGER.info("COJI %s session idle, disconnecting", self.address)
+            await self._disconnect()
 
     async def _disconnect(self) -> None:
         client = self._client

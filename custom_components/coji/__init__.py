@@ -55,5 +55,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: CojiConfigEntry) -> boo
     """Unload a COJI config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        await entry.runtime_data.client.async_shutdown()
         async_unload_services(hass)
     return unload_ok

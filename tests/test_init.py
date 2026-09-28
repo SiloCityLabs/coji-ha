@@ -67,6 +67,10 @@ async def test_setup_forwards_platforms(hass: HomeAssistant):
             return_value=ble,
         ),
         patch(
+            "custom_components.coji.coordinator.async_address_present",
+            return_value=True,
+        ),
+        patch(
             "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
             new_callable=AsyncMock,
         ) as forward,

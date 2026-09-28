@@ -182,14 +182,13 @@ def battery_voltage(payload: bytes) -> float:
 
 
 def format_firmware(payload: bytes) -> str:
-    """MiP-style version bytes: year, month, day, revision."""
-    if len(payload) >= 4:
-        year, month, day, revision = payload[0], payload[1], payload[2], payload[3]
-        full_year = 2000 + year if year < 100 else year
-        return f"{full_year:04d}-{month:02d}-{day:02d} r{revision}"
+    """Android SDK version: each reply byte as a signed decimal, concatenated.
+
+    ``Byte.toString`` on the payload, not a MiP year/month/day stamp.
+    """
     if not payload:
         return ""
-    return payload.hex()
+    return "".join(str(byte if byte < 128 else byte - 256) for byte in payload)
 
 
 def parse_attitude(payload: bytes) -> dict[str, bool]:

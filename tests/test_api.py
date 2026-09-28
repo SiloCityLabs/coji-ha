@@ -1,5 +1,7 @@
 """Tests for the COJI BLE client."""
 
+import asyncio
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -64,8 +66,10 @@ async def test_refresh_parses_ascii_replies(device: BLEDevice):
     assert state.chest_red is True
     assert state.chest_green is False
     assert state.chest_blue is True
-    assert state.firmware == "2014-02-27 r7"
+    assert state.firmware == "142277"
     assert state.battery_voltage == round(500 * 0.00322 * 3, 3)
+    gatt.disconnect.assert_not_awaited()
+    await api.async_shutdown()
     gatt.disconnect.assert_awaited()
 
 
@@ -85,6 +89,7 @@ async def test_drive_writes_timed_burst(device: BLEDevice):
     gatt.write_gatt_char.assert_awaited_once_with(
         CHAR_TX, bytes((0x71, 100, 20)), response=False
     )
+    await api.async_shutdown()
 
 
 @pytest.mark.asyncio
@@ -103,3 +108,47 @@ async def test_refresh_fails_when_nothing_answers(device: BLEDevice):
         pytest.raises(TimeoutError),
     ):
         await api.refresh()
+    gatt.write_gatt_char.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_failed_connect_backs_off(device: BLEDevice):
+    """A second command does not open another connection during cooldown."""
+    api = CojiClient(device)
+    api._backoff_until = time.monotonic() + 30
+
+    with (
+        patch(
+            "custom_components.coji.api.establish_connection",
+            new_callable=AsyncMock,
+        ) as connect,
+        pytest.raises(ConnectionError, match="cooling down"),
+    ):
+        await api.drive("forward")
+
+    connect.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_commands_queued_behind_a_slow_link_are_dropped(device: BLEDevice):
+    """Presses that piled up while the robot was offline are not flushed later."""
+    api = CojiClient(device)
+    await api._lock.acquire()
+
+    async def _release() -> None:
+        await asyncio.sleep(0.05)
+        api._lock.release()
+
+    release = asyncio.create_task(_release())
+    with (
+        patch("custom_components.coji.api.STALE_AFTER_SECONDS", 0.01),
+        patch(
+            "custom_components.coji.api.establish_connection",
+            new_callable=AsyncMock,
+        ) as connect,
+        pytest.raises(ConnectionError, match="busy"),
+    ):
+        await api.drive("forward")
+
+    await release
+    connect.assert_not_awaited()

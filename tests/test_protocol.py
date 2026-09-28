@@ -96,7 +96,7 @@ def test_partial_hex_is_buffered():
 
 
 def test_firmware_and_attitude():
-    assert format_firmware(bytes((0x0E, 0x02, 0x1B, 0x07))) == "2014-02-27 r7"
+    assert format_firmware(bytes((0x0E, 0x02, 0x1B, 0x07))) == "142277"
     flags = parse_attitude(bytes((0, 1, 0, 0, 0, 0, 1, 0)))
     assert flags["tilt_right"]
     assert flags["shake"]
