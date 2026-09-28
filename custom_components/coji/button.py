@@ -19,7 +19,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up drive and power buttons."""
+    """Set up drive and stop buttons."""
     coordinator: CojiUpdateCoordinator = config_entry.runtime_data
     async_add_entities(
         [
@@ -32,13 +32,6 @@ async def async_setup_entry(
                 "stop",
                 "mdi:stop",
                 coordinator.client.stop,
-            ),
-            CojiActionButton(
-                coordinator,
-                "power_off",
-                "mdi:power",
-                coordinator.client.power_off,
-                entity_category=EntityCategory.CONFIG,
             ),
         ]
     )

@@ -29,6 +29,7 @@ CMD_GET_VOLUME = 0x22
 CMD_SET_BACKLIGHT = 0x24
 CMD_GET_BACKLIGHT = 0x25
 CMD_REBOOT = 0x31
+# Defined in the SDK and never sent by it. A bare 0x32 locks the firmware.
 CMD_POWER_OFF = 0x32
 CMD_DRIVE_FORWARD = 0x71
 CMD_DRIVE_BACKWARD = 0x72

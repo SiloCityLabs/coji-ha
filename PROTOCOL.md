@@ -34,7 +34,6 @@ The first decoded byte is the command. The rest is the payload.
 | Set backlight | `0x24` | 0 or 1 |
 | Get backlight | `0x25` | reply is 0 or 1 |
 | Reboot | `0x31` | mode `1` (application) |
-| Power off | `0x32` | none |
 | Drive forward | `0x71` | speed 0–100, time in 8ms ticks |
 | Drive backward | `0x72` | speed, time |
 | Turn left | `0x73` | **time, speed** (swapped) |
@@ -56,4 +55,4 @@ Paths use backslashes, for example `s\R_Sfx_Beep 1.wav`, `ani\e\001.txt`, `img\d
 
 ## What this integration does not do
 
-File upload, directory listing, and firmware update are in the SDK and are not implemented. Continuous drive (`0x78`) has an enum in the library and no public method, so drive stays timed.
+File upload, directory listing, and firmware update are in the SDK and are not implemented. Continuous drive (`0x78`) has an enum in the library and no public method, so drive stays timed. Power-off (`0x32`) is the same kind of unused constant: the phone SDK never sends it, and sending it locks the firmware. The power switch is how the robot turns off.

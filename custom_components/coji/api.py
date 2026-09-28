@@ -29,7 +29,6 @@ from .const import (
     CMD_GET_CHEST,
     CMD_GET_FIRMWARE,
     CMD_GET_VOLUME,
-    CMD_POWER_OFF,
     CMD_REBOOT,
     DRIVE_BURST_SECONDS,
     IMAGES,
@@ -264,10 +263,6 @@ class CojiClient:
     async def reboot(self) -> None:
         """Reboot into the application (mode 1)."""
         await self._run(lambda: self._write(bytes((CMD_REBOOT, 0x01))), hold=False)
-
-    async def power_off(self) -> None:
-        """Ask the robot to power off."""
-        await self._run(lambda: self._write(bytes((CMD_POWER_OFF,))), hold=False)
 
     async def async_shutdown(self) -> None:
         """Drop the link. Called when the config entry unloads."""
