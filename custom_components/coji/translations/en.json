@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Pick a COJI that Home Assistant can already see over Bluetooth.",
+        "data": {
+          "address": "Robot"
+        }
+      },
+      "bluetooth_confirm": {
+        "description": "Set up {name}? Disconnect it in the WowWee app first. That app holds the Bluetooth connection."
+      }
+    },
+    "abort": {
+      "not_coji": "This Bluetooth device is not a COJI.",
+      "no_devices_found": "No COJI robots found. Turn the robot on and try again.",
+      "already_configured": "This COJI is already set up.",
+      "already_in_progress": "This COJI is already being set up."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "left_button": { "name": "Left button" },
+      "center_button": { "name": "Center button" },
+      "right_button": { "name": "Right button" }
+    },
+    "button": {
+      "drive_forward": { "name": "Drive forward" },
+      "drive_backward": { "name": "Drive backward" },
+      "drive_left": { "name": "Turn left" },
+      "drive_right": { "name": "Turn right" },
+      "stop": { "name": "Stop" },
+      "power_off": { "name": "Power off" }
+    },
+    "light": {
+      "chest": { "name": "Chest LED" }
+    },
+    "number": {
+      "volume": { "name": "Volume" }
+    },
+    "select": {
+      "sound": { "name": "Sound" },
+      "animation": { "name": "Animation" },
+      "image": { "name": "Image" }
+    },
+    "sensor": {
+      "battery": { "name": "Battery" },
+      "firmware": { "name": "Firmware" },
+      "attitude": { "name": "Attitude" }
+    },
+    "switch": {
+      "backlight": { "name": "Backlight" }
+    }
+  }
+}

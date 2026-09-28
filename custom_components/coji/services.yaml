@@ -1,0 +1,127 @@
+drive:
+  name: Drive
+  description: Drive or turn the COJI for a short timed burst.
+  fields:
+    device_id:
+      name: Device
+      description: COJI robot
+      required: true
+      selector:
+        device:
+          integration: coji
+    direction:
+      name: Direction
+      required: true
+      selector:
+        select:
+          options:
+            - forward
+            - backward
+            - left
+            - right
+    speed:
+      name: Speed
+      description: 0 to 1. The robot scales this to 0–100.
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.05
+          mode: slider
+    seconds:
+      name: Seconds
+      description: Duration. The device uses 8ms ticks, up to about 2 seconds.
+      selector:
+        number:
+          min: 0.008
+          max: 2.04
+          step: 0.008
+          mode: box
+
+play_sound:
+  name: Play sound
+  description: Play a built-in sound by name (bark, meow, giggle, …) or an on-device path such as s\R_Sfx_Beep 1.wav.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: coji
+    sound:
+      name: Sound
+      required: true
+      selector:
+        text:
+
+play_animation:
+  name: Play animation
+  description: Play a built-in face animation by name (emoji_1, vehicle_1, …) or an on-device path such as ani\e\001.txt.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: coji
+    animation:
+      name: Animation
+      required: true
+      selector:
+        text:
+    sound:
+      name: Sound
+      description: Play the animation's sound.
+      selector:
+        boolean:
+
+show_image:
+  name: Show image
+  description: Show a built-in picture by name (smile, heart, rocket, …) or an on-device path such as img\d\1f603.jpg.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: coji
+    image:
+      name: Image
+      required: true
+      selector:
+        text:
+    template:
+      name: Motion
+      selector:
+        select:
+          options:
+            - none
+            - scale_up
+            - scale_down
+            - right_to_left
+            - left_to_right
+            - center_to_left
+            - center_to_right
+            - down_to_center
+            - center_to_down
+            - up_to_center
+            - center_to_up
+    duration:
+      name: Duration
+      description: 0 uses the robot default. 1–30 are the SDK duration steps.
+      selector:
+        number:
+          min: 0
+          max: 30
+          mode: box
+
+stop:
+  name: Stop
+  description: Stop the current animation and sound.
+  fields:
+    device_id:
+      name: Device
+      required: true
+      selector:
+        device:
+          integration: coji

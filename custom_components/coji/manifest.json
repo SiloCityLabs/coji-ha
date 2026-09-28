@@ -1,0 +1,27 @@
+{
+  "domain": "coji",
+  "name": "COJI",
+  "bluetooth": [
+    {
+      "local_name": "COJI*",
+      "connectable": true
+    },
+    {
+      "local_name": "Coji*",
+      "connectable": true
+    },
+    {
+      "manufacturer_id": 12032,
+      "connectable": true
+    }
+  ],
+  "codeowners": ["@SiloCityLabs"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://github.com/SiloCityLabs/coji-ha",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/SiloCityLabs/coji-ha/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}

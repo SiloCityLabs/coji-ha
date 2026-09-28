@@ -1,0 +1,17 @@
+# Test dependencies for the COJI integration
+pytest
+pytest-asyncio
+pytest-cov
+pytest-homeassistant-custom-component
+
+homeassistant
+
+bleak
+bleak-retry-connector
+
+# USB integration imports serialx when bluetooth is loaded in tests.
+serialx
+
+aiousbwatcher
+pyserial
+pyudev
