@@ -86,10 +86,14 @@ async def test_remote_card_is_registered_once(hass: HomeAssistant):
     """The Lovelace module is attached once, even if setup runs twice."""
     hass.http = MagicMock()
     hass.http.async_register_static_paths = AsyncMock()
-    with patch("custom_components.coji.frontend.add_extra_js_url") as add_js:
+    hass.http.register_view = MagicMock()
+    with patch(
+        "custom_components.coji.frontend._async_ensure_lovelace_resource",
+        new_callable=AsyncMock,
+    ) as ensure:
         assert await async_setup(hass, {}) is True
         assert await async_setup(hass, {}) is True
 
     hass.http.async_register_static_paths.assert_awaited_once()
-    add_js.assert_called_once()
-    assert "coji-remote-card.js" in add_js.call_args.args[1]
+    hass.http.register_view.assert_called_once()
+    ensure.assert_awaited_once()

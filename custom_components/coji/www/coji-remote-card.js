@@ -176,7 +176,8 @@ class CojiRemoteCard extends HTMLElement {
           padding: 12px 8px;
           cursor: pointer;
         }
-        .face button.on { background: rgba(255,193,7,0.28); }
+        .face button.on.backlight { background: rgba(255,193,7,0.28); }
+        .face button.on.chest { background: rgba(66,165,245,0.30); }
         .face .label { display: block; font-weight: 600; }
         .face .sub { display: block; opacity: 0.7; font-size: 12px; }
         .row {
@@ -350,7 +351,7 @@ function padButton(key, icon, extra = "") {
 }
 
 function faceButton(key, label, icon, state) {
-  const on = state?.state === "on" ? "on" : "";
+  const on = state?.state === "on" ? `on ${key}` : key;
   return `<button class="${on}" data-act="${key}" type="button"><ha-icon icon="${icon}"></ha-icon><span class="label">${label}</span><span class="sub">${onOff(state)}</span></button>`;
 }
 
