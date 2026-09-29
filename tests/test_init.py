@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.coji import async_setup_entry
+from custom_components.coji import async_setup, async_setup_entry
 from custom_components.coji.const import DOMAIN
 
 
@@ -79,3 +79,17 @@ async def test_setup_forwards_platforms(hass: HomeAssistant):
 
     forward.assert_awaited()
     assert entry.runtime_data.client is mock_client
+
+
+@pytest.mark.asyncio
+async def test_remote_card_is_registered_once(hass: HomeAssistant):
+    """The Lovelace module is attached once, even if setup runs twice."""
+    hass.http = MagicMock()
+    hass.http.async_register_static_paths = AsyncMock()
+    with patch("custom_components.coji.frontend.add_extra_js_url") as add_js:
+        assert await async_setup(hass, {}) is True
+        assert await async_setup(hass, {}) is True
+
+    hass.http.async_register_static_paths.assert_awaited_once()
+    add_js.assert_called_once()
+    assert "coji-remote-card.js" in add_js.call_args.args[1]

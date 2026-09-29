@@ -38,6 +38,14 @@ Manual install: copy `custom_components/coji` into `/config/custom_components/`,
 2. **Settings → Devices & Services → Add Integration → COJI**
 3. Confirm the discovered robot
 
+## Remote card
+
+The integration includes one Lovelace card. After the restart, open a dashboard, choose **Add card**, and pick **COJI Remote**. It finds the robot by itself. With more than one COJI, the card editor asks which one.
+
+```yaml
+type: custom:coji-remote-card
+```
+
 Home Assistant polls about once a minute for battery, volume, backlight, and the chest LED. Drive buttons and the clip menus connect only when you use them.
 
 ## Drive

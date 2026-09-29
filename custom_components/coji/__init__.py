@@ -9,10 +9,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.typing import ConfigType
 
 from .api import CojiClient
 from .config_flow import format_unique_id
 from .coordinator import CojiUpdateCoordinator
+from .frontend import async_register_card
 from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +30,12 @@ PLATFORMS = [
 ]
 
 type CojiConfigEntry = ConfigEntry[CojiUpdateCoordinator]
+
+
+async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
+    """Register the remote card. Devices are added through the config flow."""
+    await async_register_card(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CojiConfigEntry) -> bool:
