@@ -100,9 +100,7 @@ async def _async_ensure_lovelace_resource(hass: HomeAssistant) -> None:
             if any(marker in item.get("url", "") for marker in _RESOURCE_MARKERS)
         ]
         if not related:
-            await resources.async_create_item(
-                {"res_type": "module", "url": preferred}
-            )
+            await resources.async_create_item({"res_type": "module", "url": preferred})
             _LOGGER.info("Added Lovelace resource %s", preferred)
             return
         primary = related[0]
