@@ -40,6 +40,7 @@ async def test_setup_forwards_platforms(hass: HomeAssistant):
         domain=DOMAIN,
         unique_id="aabbccddeeff",
         data={CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"},
+        state=ConfigEntryState.SETUP_IN_PROGRESS,
     )
     entry.add_to_hass(hass)
     ble = MagicMock()
