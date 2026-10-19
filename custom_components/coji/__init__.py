@@ -9,10 +9,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .api import CojiClient
 from .config_flow import format_unique_id
+from .const import DOMAIN
 from .coordinator import CojiUpdateCoordinator
 from .frontend import async_register_card
 from .services import async_setup_services, async_unload_services
@@ -30,6 +32,8 @@ PLATFORMS = [
 ]
 
 type CojiConfigEntry = ConfigEntry[CojiUpdateCoordinator]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:

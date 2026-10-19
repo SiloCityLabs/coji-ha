@@ -1,6 +1,7 @@
 {
   "domain": "coji",
   "name": "COJI",
+  "after_dependencies": ["frontend", "http", "lovelace"],
   "bluetooth": [
     {
       "local_name": "COJI*",
@@ -18,7 +19,6 @@
   "codeowners": ["@SiloCityLabs"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
-  "after_dependencies": ["frontend", "http", "lovelace"],
   "documentation": "https://github.com/SiloCityLabs/coji-ha",
   "integration_type": "device",
   "iot_class": "local_polling",
